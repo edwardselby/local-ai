@@ -27,14 +27,26 @@ Optional for faster performance:
 Open a terminal in this folder and run:
 
 ```bash
-# Start everything
-docker-compose up -d
-
-# Check if it's running
-docker-compose ps
+# Start everything (automatically handles GPU setup, Docker contexts, and container conflicts)
+./start.sh
 ```
 
+The smart start script will:
+- Detect your GPU and offer GPU acceleration
+- Handle Docker Desktop vs native Docker contexts
+- Clean up any conflicting containers
+- Check container health after startup
+
 That's it! The system is now running.
+
+**Alternative (manual method):**
+```bash
+# For GPU support
+docker-compose -f docker-compose.gpu.yml up -d
+
+# For CPU only
+docker-compose up -d
+```
 
 ### Step 2: Open the Chat Interface
 
@@ -80,27 +92,49 @@ Here are popular models to try (use `/models` then **+** to add):
 - `mixtral:8x7b` - Excellent but needs 26GB
 - `deepseek-coder-v2:16b` - Best for programming
 
-## Using with GPU (Optional)
+## GPU Support (Faster Performance!)
 
-If you have an NVIDIA GPU:
+If you have an NVIDIA GPU, the `./start.sh` script will automatically detect it and offer GPU acceleration. If you need to troubleshoot GPU issues:
 
 ```bash
-# Stop current setup
-docker-compose down
+# Fix GPU setup issues (handles everything automatically)
+./fix-gpu.sh
+```
 
-# Start with GPU support
+This script will:
+- Install NVIDIA Container Toolkit if needed  
+- Fix Docker context issues (Docker Desktop → native Docker)
+- Handle user permissions
+- Create proper library links
+- Test GPU access
+
+**Manual GPU setup:**
+```bash
+# Stop current setup and start with GPU
+docker-compose down
 docker-compose -f docker-compose.gpu.yml up -d
 ```
 
-Models will run much faster!
-
 ## Common Commands
 
+**Recommended (using smart scripts):**
 ```bash
-# Start the system
+# Start the system (with automatic setup)
+./start.sh
+
+# Stop the system  
+./stop.sh
+
+# Fix GPU issues
+./fix-gpu.sh
+```
+
+**Manual commands:**
+```bash
+# Start manually
 docker-compose up -d
 
-# Stop the system
+# Stop manually
 docker-compose down
 
 # View logs if something seems wrong
@@ -183,6 +217,13 @@ Once comfortable, you can:
 
 ## Stop & Cleanup
 
+**Recommended:**
+```bash
+# Stop the system (keeps your data)
+./stop.sh
+```
+
+**Manual cleanup:**
 ```bash
 # Stop containers (keeps your data)
 docker-compose down
