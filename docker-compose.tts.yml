@@ -1,0 +1,75 @@
+version: '3.8'
+
+services:
+  # Ollama - The LLM backend that runs the models
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    restart: unless-stopped
+    volumes:
+      - ollama-data:/root/.ollama
+    ports:
+      - "11434:11434"
+    # Uncomment below for GPU support (NVIDIA only)
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+
+  # Open WebUI - Beautiful web interface for chatting with LLMs
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: open-webui
+    restart: unless-stopped
+    ports:
+      - "3000:8080"
+    environment:
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - WEBUI_SECRET_KEY=changethissecretkey
+      - WEBUI_NAME=Local AI Chat
+      - ENABLE_SIGNUP=true
+    volumes:
+      - open-webui-data:/app/backend/data
+    depends_on:
+      - ollama
+      - tts-service
+
+  # OpenAI-speech TTS Service - Text-to-Speech functionality
+  tts-service:
+    image: ghcr.io/matatonic/openedai-speech:latest
+    container_name: tts-service
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      # Use Piper TTS (fast, CPU-based)
+      - TTS_HOME=/app/voices
+      - HF_HOME=/app/cache
+      # Available voices: alloy, echo, fable, onyx, nova, shimmer
+      - VOICE_alloy=en_US-lessac-medium
+      - VOICE_echo=en_US-ryan-medium  
+      - VOICE_fable=en_GB-jenny_dioco-medium
+      - VOICE_onyx=en_US-ryan-low
+      - VOICE_nova=en_US-lessac-high
+      - VOICE_shimmer=en_US-lessac-medium
+    volumes:
+      - tts-voices:/app/voices
+      - tts-cache:/app/cache
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/v1/models"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  ollama-data:
+    name: ollama_data
+  open-webui-data:
+    name: open_webui_data
+  tts-voices:
+    name: tts_voices
+  tts-cache:
+    name: tts_cache

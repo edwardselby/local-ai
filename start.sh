@@ -5,6 +5,14 @@
 echo "🚀 Starting Local AI with Open WebUI..."
 echo ""
 
+# Ask about voice features early
+echo "🎤 Voice Features Setup:"
+echo "1) Standard setup (text only)"
+echo "2) Add Text-to-Speech (voice output)"
+echo ""
+read -p "Enter your choice (1-2): " voice_choice
+echo ""
+
 # Check if Docker is running
 if ! docker info > /dev/null 2>&1; then
     echo "❌ Docker is not running!"
@@ -312,13 +320,28 @@ else
     echo "🚀 Starting services..."
 fi
 
-if [ "$GPU_AVAILABLE" = true ]; then
-    docker-compose -f docker-compose.gpu.yml up $COMPOSE_FLAGS
+# Determine which docker-compose file to use
+COMPOSE_FILE=""
+if [ "$voice_choice" = "2" ]; then
+    if [ "$GPU_AVAILABLE" = true ]; then
+        COMPOSE_FILE="docker-compose.tts.gpu.yml"
+        echo "🎤 Starting with GPU acceleration + Text-to-Speech..."
+    else
+        COMPOSE_FILE="docker-compose.tts.yml"
+        echo "🎤 Starting with Text-to-Speech (CPU mode)..."
+    fi
 else
-    echo "📝 Using CPU-only setup..."
-    echo "   (This is fine, but models will run slower)"
-    docker-compose up $COMPOSE_FLAGS
+    if [ "$GPU_AVAILABLE" = true ]; then
+        COMPOSE_FILE="docker-compose.gpu.yml"
+        echo "🚀 Starting with GPU acceleration..."
+    else
+        COMPOSE_FILE="docker-compose.yml"
+        echo "📝 Using CPU-only setup..."
+        echo "   (This is fine, but models will run slower)"
+    fi
 fi
+
+docker-compose -f "$COMPOSE_FILE" up $COMPOSE_FLAGS
 
 echo ""
 echo "⏳ Waiting for services to start..."
@@ -389,8 +412,13 @@ if docker-compose ps | grep -q "Up"; then
     echo "📌 Next steps:"
     echo "   1. Open your browser and go to: http://localhost:3000"
     echo "   2. Create an account (first user becomes admin)"
-    echo "   3. Download a model: type /models in chat, click + and add 'llama3.2:3b'"
-    echo "   4. Start chatting!"
+    echo "   3. Download a model: Settings → Admin Panel → Models → Pull 'llama3.2:3b'"
+    if [ "$voice_choice" = "2" ]; then
+        echo "   4. Configure TTS: Settings → Audio → TTS Settings"
+        echo "   5. Start chatting with voice output!"
+    else
+        echo "   4. Start chatting!"
+    fi
     echo ""
     echo "💡 Troubleshooting:"
     echo "   • If page doesn't load, wait 2-3 minutes and try again"
