@@ -213,6 +213,19 @@ docker-compose restart
 - **Ollama Models**: https://ollama.com/library
 - **Issues**: Check the Troubleshooting section above
 
+## 🛰️ MCP Integration & Home Automation
+
+Transform your Local AI into a powerful home automation hub using **Model Context Protocol (MCP)**! MCP enables your AI to control smart home devices, manage calendars, integrate with APIs, and automate tasks - all while keeping everything local and private.
+
+**Perfect for:**
+- 🏡 Smart home control (lights, thermostat, security)
+- 📅 Calendar and task management
+- 🌐 Real-time data (weather, traffic, news)
+- 🔌 Custom API integrations
+- 🛠️ Extensible automation without modifying core AI
+
+**[📖 Complete MCP Integration Guide →](MCP_INTEGRATION.md)**
+
 ## Advanced Users
 
 Once comfortable, you can:

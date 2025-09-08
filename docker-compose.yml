@@ -59,6 +59,7 @@ services:
     environment:
       - TTS_HOME=/app/voices
       - HF_HOME=/app/cache
+      # Working voices (back to original configuration)
       - VOICE_alloy=en_US-lessac-medium
       - VOICE_echo=en_US-ryan-medium  
       - VOICE_fable=en_GB-jenny_dioco-medium

@@ -34,24 +34,38 @@ This guide explains how to add voice capabilities to your Local AI setup.
 # Choose option 2 when prompted
 ```
 
-## TTS Configuration in Open WebUI
+## Voice Configuration in Open WebUI
 
 After starting with TTS enabled:
 
 1. **Open the interface**: http://localhost:3000
 2. **Go to Settings**: Click the ⚙️ Settings icon
-3. **Navigate to Audio**: Settings → Audio → TTS Settings
-4. **Configure TTS endpoint**:
-   - **API Base URL**: `http://tts-service:8000/v1`
-   - **API Key**: `sk-dummy` (any dummy key works)
-   - **Model**: Select `tts-1`
-5. **Choose a voice**:
+3. **Navigate to Voice**: Profile → Admin Panel → Settings → Voice (Speech to text)
+
+### **STT (Speech-to-Text) Configuration:**
+4. **Configure STT**:
+   - **Speech-to-Text Engine → STT Model**: Select "Whisper (local)"
+   - **Input field**: `base`
+   - **Save settings**
+
+### **TTS (Text-to-Speech) Configuration:**
+5. **Configure TTS endpoint**:
+   - **Text-to-Speech Engine → TTS Model**: Select "OpenAI"
+   - **Base URL**: `http://tts-service:8000/v1`
+   - **API Key**: `sk-dummy`
+   - **Model**: `tts-1` (recommended - `tts-1-hd` may cause performance issues)
+6. **Choose a voice**:
    - `alloy` - Balanced, clear voice
    - `echo` - Warm, friendly voice
    - `fable` - British accent, expressive
    - `onyx` - Deep, authoritative voice
    - `nova` - Bright, energetic voice
    - `shimmer` - Soft, pleasant voice
+
+### **Testing:**
+7. **After saving**: Refresh the page and test both features:
+   - 🎤 **Microphone icon** should appear in chat for speech input
+   - 🔊 **Speaker icons** should appear next to AI responses for audio playback
 
 ## Available Docker Configurations
 
