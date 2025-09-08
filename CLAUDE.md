@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a Local AI deployment system using Docker Compose to run Ollama (LLM backend) and Open WebUI (chat interface) locally. The project prioritizes ease of use for beginners while supporting GPU acceleration for better performance.
+This is a Local AI deployment system using Docker Compose to run Ollama (LLM backend) and Open WebUI (chat interface) locally. The project is **optimized for Linux (Ubuntu) with NVIDIA GPUs**, featuring smart scripts for automatic setup and troubleshooting. While the Docker containers work on Mac and Windows, the advanced automation features (`start.sh`, `fix-gpu.sh`) are Linux-specific.
 
 ## Key Commands
 

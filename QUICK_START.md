@@ -1,10 +1,16 @@
 # 🚀 QUICK START - 3 Steps Only!
 
+> **Note**: Optimized for **Linux (Ubuntu) with NVIDIA GPU**. Mac/Windows users should use the manual Docker commands.
+
 ## Step 1: Start
+**Linux:**
 ```bash
 ./start.sh
 ```
-Or if on Windows: `docker-compose up -d`
+**Mac/Windows:**
+```bash
+docker-compose up -d
+```
 
 ## Step 2: Open Browser
 Go to: **http://localhost:3000**

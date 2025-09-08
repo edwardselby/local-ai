@@ -2,6 +2,8 @@
 
 Run AI models locally on your computer with a beautiful chat interface - no cloud needed!
 
+> **Note**: This repository is optimized for **Linux (Ubuntu)** with **NVIDIA GPUs**. The smart scripts (`start.sh`, `fix-gpu.sh`) are designed for quick setup on Linux systems. While the Docker containers work on Mac and Windows, you'll need to use the manual Docker commands on those platforms.
+
 ## What is this?
 
 This project lets you:
@@ -24,6 +26,7 @@ Optional for faster performance:
 
 ### Step 1: Start the System
 
+**For Linux users:**
 Open a terminal in this folder and run:
 
 ```bash
@@ -37,16 +40,18 @@ The smart start script will:
 - Clean up any conflicting containers
 - Check container health after startup
 
-That's it! The system is now running.
+**For Mac/Windows users:**
+Use the manual Docker commands:
 
-**Alternative (manual method):**
 ```bash
-# For GPU support
+# For GPU support (Linux only)
 docker-compose -f docker-compose.gpu.yml up -d
 
-# For CPU only
+# For CPU only (all platforms)
 docker-compose up -d
 ```
+
+That's it! The system is now running.
 
 ### Step 2: Open the Chat Interface
 
