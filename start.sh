@@ -5,20 +5,20 @@
 echo "🚀 Starting Local AI with Open WebUI..."
 echo ""
 
-# Ask about voice features early
+# Check if Docker is running first
+if ! docker info > /dev/null 2>&1; then
+    echo "❌ Docker is not running!"
+    echo "Please start Docker Desktop first, then run this script again."
+    exit 1
+fi
+
+# Ask about voice features after confirming Docker is running
 echo "🎤 Voice Features Setup:"
 echo "1) Standard setup (text only)"
 echo "2) Add Text-to-Speech (voice output)"
 echo ""
 read -p "Enter your choice (1-2): " voice_choice
 echo ""
-
-# Check if Docker is running
-if ! docker info > /dev/null 2>&1; then
-    echo "❌ Docker is not running!"
-    echo "Please start Docker Desktop first, then run this script again."
-    exit 1
-fi
 
 # Check Docker context on Linux (Docker Desktop doesn't support GPU on Linux)
 if [ "$(uname)" = "Linux" ]; then
