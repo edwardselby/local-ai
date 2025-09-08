@@ -11,12 +11,12 @@ Go to: **http://localhost:3000**
 - Sign up (any email works, stays local)
 
 ## Step 3: Get a Model
-In the chat:
-1. Type: `/models`
-2. Click **+** button
-3. Enter: `llama3.2:3b`
-4. Wait for download
-5. Start chatting!
+In the interface:
+1. Click **⚙️ Settings**
+2. Go to **Admin Panel** → **Models**  
+3. In "Pull a model" section, enter: `llama3.2:3b`
+4. Click **Pull Model**
+5. Wait for download, then start chatting!
 
 ## To Stop
 ```bash

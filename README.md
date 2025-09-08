@@ -57,13 +57,15 @@ Open your browser and go to: **http://localhost:3000**
 
 ### Step 3: Download Your First Model
 
-In the chat interface:
+In the Open WebUI interface:
 
-1. Type: `/models` in the chat box
-2. Click the **"+"** button to pull a model
-3. For beginners, try: `llama3.2:3b` (small and fast)
-   - Or for better quality: `llama3.2:latest`
-4. Wait for download (shows progress)
+1. Click the **⚙️ Settings** icon (usually top-right corner)
+2. Go to **"Admin Panel"** → **"Settings"** → **"Models"**
+3. In the **"Pull a model from Ollama.com"** section:
+   - Enter a model name: `llama3.2:3b` (small and fast)
+   - Or for better quality: `llama3.2:latest` 
+4. Click **"Pull Model"**
+5. Wait for download (shows progress in the interface)
 
 ### Step 4: Start Chatting!
 
@@ -75,7 +77,7 @@ Once the model downloads:
 
 ## Available Models
 
-Here are popular models to try (use `/models` then **+** to add):
+Here are popular models to try (add them via **Settings** → **Admin Panel** → **Models**):
 
 ### Small & Fast (Under 4GB)
 - `llama3.2:3b` - Good for basic tasks
