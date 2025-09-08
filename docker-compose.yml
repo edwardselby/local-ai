@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  # Ollama - The LLM backend that runs the models
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    restart: unless-stopped
+    volumes:
+      - ollama-data:/root/.ollama
+    ports:
+      - "11434:11434"
+    # Uncomment below for GPU support (NVIDIA only)
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+
+  # Open WebUI - Beautiful web interface for chatting with LLMs
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: open-webui
+    restart: unless-stopped
+    ports:
+      - "3000:8080"
+    environment:
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - WEBUI_SECRET_KEY=changethissecretkey
+      - WEBUI_NAME=Local AI Chat
+      - ENABLE_SIGNUP=true
+    volumes:
+      - open-webui-data:/app/backend/data
+    depends_on:
+      - ollama
+
+volumes:
+  ollama-data:
+    name: ollama_data
+  open-webui-data:
+    name: open_webui_data
