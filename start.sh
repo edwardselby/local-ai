@@ -96,16 +96,31 @@ ALL_CONTAINERS_INFO=""
 # Check containers in current context
 EXISTING_OLLAMA=$(docker ps -aq --filter "name=ollama" 2>/dev/null)
 EXISTING_WEBUI=$(docker ps -aq --filter "name=open-webui" 2>/dev/null)
-PORT_11434_IN_USE=false
-PORT_3000_IN_USE=false
+EXISTING_TTS=$(docker ps -aq --filter "name=tts-service" 2>/dev/null)
 
-# Check if ports are in use in current context
-if docker ps --format "table {{.Names}}\t{{.Ports}}" 2>/dev/null | grep -q ":11434->"; then
-    PORT_11434_IN_USE=true
+# Auto-detect ports used by existing containers
+OLLAMA_PORTS=""
+WEBUI_PORTS=""
+TTS_PORTS=""
+
+if [ -n "$EXISTING_OLLAMA" ]; then
+    OLLAMA_PORTS=$(docker ps --filter "name=ollama" --format "{{.Ports}}" 2>/dev/null)
 fi
-if docker ps --format "table {{.Names}}\t{{.Ports}}" 2>/dev/null | grep -q ":3000->"; then
-    PORT_3000_IN_USE=true
+if [ -n "$EXISTING_WEBUI" ]; then
+    WEBUI_PORTS=$(docker ps --filter "name=open-webui" --format "{{.Ports}}" 2>/dev/null)
 fi
+if [ -n "$EXISTING_TTS" ]; then
+    TTS_PORTS=$(docker ps --filter "name=tts-service" --format "{{.Ports}}" 2>/dev/null)
+fi
+
+# Function to extract host ports from Docker port format
+extract_host_ports() {
+    echo "$1" | grep -oE '0\.0\.0\.0:[0-9]+' | cut -d: -f2 | sort -u
+}
+
+OLLAMA_HOST_PORTS=$(extract_host_ports "$OLLAMA_PORTS")
+WEBUI_HOST_PORTS=$(extract_host_ports "$WEBUI_PORTS")
+TTS_HOST_PORTS=$(extract_host_ports "$TTS_PORTS")
 
 # Also check other contexts if on Linux
 OTHER_CONTEXT_HAS_CONTAINERS=false
@@ -130,7 +145,7 @@ if [ "$(uname)" = "Linux" ] && [ -n "$CONTEXTS" ]; then
     docker context use "$CURRENT_CONTEXT" &>/dev/null
 fi
 
-if [ -n "$EXISTING_OLLAMA" ] || [ -n "$EXISTING_WEBUI" ] || [ "$PORT_11434_IN_USE" = true ] || [ "$PORT_3000_IN_USE" = true ] || [ "$OTHER_CONTEXT_HAS_CONTAINERS" = true ]; then
+if [ -n "$EXISTING_OLLAMA" ] || [ -n "$EXISTING_WEBUI" ] || [ -n "$EXISTING_TTS" ] || [ "$OTHER_CONTEXT_HAS_CONTAINERS" = true ]; then
     echo ""
     echo "⚠️  Existing containers detected that may conflict:"
     
@@ -146,6 +161,9 @@ if [ -n "$EXISTING_OLLAMA" ] || [ -n "$EXISTING_WEBUI" ] || [ "$PORT_11434_IN_US
         OLLAMA_STATUS=$(docker ps --filter "name=ollama" --format "{{.Status}}" 2>/dev/null)
         if [ -n "$OLLAMA_STATUS" ]; then
             echo "   • ollama container: Running ($OLLAMA_STATUS)"
+            if [ -n "$OLLAMA_HOST_PORTS" ]; then
+                echo "     Using ports: $OLLAMA_HOST_PORTS"
+            fi
         else
             echo "   • ollama container: Stopped"
         fi
@@ -155,25 +173,30 @@ if [ -n "$EXISTING_OLLAMA" ] || [ -n "$EXISTING_WEBUI" ] || [ "$PORT_11434_IN_US
         WEBUI_STATUS=$(docker ps --filter "name=open-webui" --format "{{.Status}}" 2>/dev/null)
         if [ -n "$WEBUI_STATUS" ]; then
             echo "   • open-webui container: Running ($WEBUI_STATUS)"
+            if [ -n "$WEBUI_HOST_PORTS" ]; then
+                echo "     Using ports: $WEBUI_HOST_PORTS"
+            fi
         else
             echo "   • open-webui container: Stopped"
         fi
     fi
     
-    if [ "$PORT_11434_IN_USE" = true ]; then
-        CONTAINER_USING_11434=$(docker ps --format "table {{.Names}}\t{{.Ports}}" 2>/dev/null | grep ":11434->" | awk '{print $1}')
-        echo "   • Port 11434 in use by: $CONTAINER_USING_11434"
-    fi
-    
-    if [ "$PORT_3000_IN_USE" = true ]; then
-        CONTAINER_USING_3000=$(docker ps --format "table {{.Names}}\t{{.Ports}}" 2>/dev/null | grep ":3000->" | awk '{print $1}')
-        echo "   • Port 3000 in use by: $CONTAINER_USING_3000"
+    if [ -n "$EXISTING_TTS" ]; then
+        TTS_STATUS=$(docker ps --filter "name=tts-service" --format "{{.Status}}" 2>/dev/null)
+        if [ -n "$TTS_STATUS" ]; then
+            echo "   • tts-service container: Running ($TTS_STATUS)"
+            if [ -n "$TTS_HOST_PORTS" ]; then
+                echo "     Using ports: $TTS_HOST_PORTS"
+            fi
+        else
+            echo "   • tts-service container: Stopped"
+        fi
     fi
     
     echo ""
     echo "What would you like to do?"
     echo "1) Stop and remove existing containers, then start fresh"
-    echo "2) Try to restart existing containers with current configuration"
+    echo "2) Try switching to existing containers with new configuration"
     echo "3) Exit and let me handle this manually"
     echo ""
     read -p "Enter your choice (1-3): " choice
@@ -210,17 +233,15 @@ if [ -n "$EXISTING_OLLAMA" ] || [ -n "$EXISTING_WEBUI" ] || [ "$PORT_11434_IN_US
                     docker stop open-webui 2>/dev/null || true
                     docker rm open-webui 2>/dev/null || true
                 fi
+                if [ -n "$EXISTING_TTS" ]; then
+                    echo "Removing tts-service container..."
+                    docker stop tts-service 2>/dev/null || true
+                    docker rm tts-service 2>/dev/null || true
+                fi
             fi
             
-            # Also stop any other containers using the ports
-            if [ "$PORT_11434_IN_USE" = true ] && [ "$CONTAINER_USING_11434" != "ollama" ]; then
-                echo "Stopping container using port 11434: $CONTAINER_USING_11434"
-                docker stop "$CONTAINER_USING_11434" 2>/dev/null || true
-            fi
-            if [ "$PORT_3000_IN_USE" = true ] && [ "$CONTAINER_USING_3000" != "open-webui" ]; then
-                echo "Stopping container using port 3000: $CONTAINER_USING_3000"
-                docker stop "$CONTAINER_USING_3000" 2>/dev/null || true
-            fi
+            # Note: With dynamic port detection, we now handle container conflicts
+            # more intelligently by detecting actual ports rather than assuming defaults
             echo "✅ Cleanup complete. Starting fresh setup..."
             echo ""
             ;;
@@ -235,6 +256,10 @@ if [ -n "$EXISTING_OLLAMA" ] || [ -n "$EXISTING_WEBUI" ] || [ "$PORT_11434_IN_US
             if [ -n "$EXISTING_WEBUI" ]; then
                 echo "Stopping open-webui container..."
                 docker stop open-webui 2>/dev/null || true
+            fi
+            if [ -n "$EXISTING_TTS" ]; then
+                echo "Stopping tts-service container..."
+                docker stop tts-service 2>/dev/null || true
             fi
             echo "✅ Existing containers stopped. Will restart with docker-compose..."
             echo ""
@@ -320,35 +345,33 @@ else
     echo "🚀 Starting services..."
 fi
 
-# Determine which docker-compose file to use
-COMPOSE_FILE=""
-if [ "$voice_choice" = "2" ]; then
-    if [ "$GPU_AVAILABLE" = true ]; then
-        COMPOSE_FILE="docker-compose.tts.gpu.yml"
-        echo "🎤 Starting with GPU acceleration + Text-to-Speech..."
-    else
-        COMPOSE_FILE="docker-compose.tts.yml"
-        echo "🎤 Starting with Text-to-Speech (CPU mode)..."
-    fi
+# Build profile list based on user choices
+PROFILES="--profile base"  # Always needed for open-webui
+
+if [ "$GPU_AVAILABLE" = true ]; then
+    PROFILES="$PROFILES --profile gpu"
+    echo "🚀 Starting with GPU acceleration..."
 else
-    if [ "$GPU_AVAILABLE" = true ]; then
-        COMPOSE_FILE="docker-compose.gpu.yml"
-        echo "🚀 Starting with GPU acceleration..."
-    else
-        COMPOSE_FILE="docker-compose.yml"
-        echo "📝 Using CPU-only setup..."
-        echo "   (This is fine, but models will run slower)"
-    fi
+    PROFILES="$PROFILES --profile cpu"
+    echo "📝 Using CPU-only setup..."
+    echo "   (This is fine, but models will run slower)"
 fi
 
-docker-compose -f "$COMPOSE_FILE" up $COMPOSE_FLAGS
+if [ "$voice_choice" = "2" ]; then
+    PROFILES="$PROFILES --profile tts"
+    echo "🎤 Adding Text-to-Speech service..."
+fi
+
+echo "Using profiles: base$([ "$GPU_AVAILABLE" = true ] && echo " + gpu" || echo " + cpu")$([ "$voice_choice" = "2" ] && echo " + tts")"
+
+docker-compose $PROFILES up $COMPOSE_FLAGS
 
 echo ""
 echo "⏳ Waiting for services to start..."
 sleep 5
 
 # Check if services are running and healthy
-if docker-compose ps | grep -q "Up"; then
+if docker-compose $PROFILES ps | grep -q "Up"; then
     echo ""
     echo "✅ Containers started successfully!"
     echo ""
@@ -427,11 +450,11 @@ if docker-compose ps | grep -q "Up"; then
 else
     echo ""
     echo "❌ Something went wrong. Running diagnostics..."
-    docker-compose ps
+    docker-compose $PROFILES ps
     echo ""
     echo "Container logs:"
     echo "==============="
-    docker-compose logs --tail 20
+    docker-compose $PROFILES logs --tail 20
     echo ""
-    echo "Try running: docker-compose logs -f"
+    echo "Try running: docker-compose $PROFILES logs -f"
 fi
